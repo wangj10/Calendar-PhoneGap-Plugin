@@ -375,8 +375,8 @@ public class Calendar extends CordovaPlugin {
             isAllDayEvent = AbstractCalendarAccessor.isAllDayEvent(new Date(jsonFilter.optLong("startTime")),
                 new Date(jsonFilter.optLong("endTime")));
           }
-          final Intent calIntent = new Intent(Intent.ACTION_EDIT).setType("vnd.android.cursor.item/event")
-              .putExtra("title", getPossibleNullString("title", jsonFilter)).putExtra("hasAlarm", 1);
+          Intent calIntent = new Intent(Intent.ACTION_EDIT).setType("vnd.android.cursor.item/event")
+                  .putExtra("title", getPossibleNullString("title", jsonFilter)).putExtra("hasAlarm", 1);
           if (isAllDayEvent) {
             calIntent.putExtra("allDay", isAllDayEvent)
                 .putExtra("beginTime",
