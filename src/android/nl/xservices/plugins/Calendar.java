@@ -205,9 +205,9 @@ public class Calendar extends CordovaPlugin {
     } else if (requestCode == PERMISSION_REQCODE_FIND_EVENTS) {
       findEvents(requestArgs);
     } else if (requestCode == PERMISSION_REQCODE_LIST_CALENDARS) {
-      listCalendars();
+      internallistCalendars();
     } else if (requestCode == PERMISSION_REQCODE_LIST_EVENTS_IN_RANGE) {
-      listEventsInRange(requestArgs);
+      internalListEventsInRange(requestArgs);
     }
   }
 
@@ -263,6 +263,11 @@ public class Calendar extends CordovaPlugin {
       requestReadPermission(PERMISSION_REQCODE_LIST_CALENDARS);
       return;
     }
+
+    internallistCalendars();
+  }
+
+  private void internallistCalendars() {
     cordova.getThreadPool().execute(new Runnable() {
       @Override
       public void run() {
@@ -416,6 +421,20 @@ public class Calendar extends CordovaPlugin {
               calIntent.putExtra(Events.RRULE, "FREQ=" + recurrence.toUpperCase() + ";INTERVAL=" + recurrenceInterval + ";UNTIL=" + formatICalDateTime(new Date(recurrenceEndTime)));
             }
           }
+
+          PackageManager pm = cordova.getContext().getPackageManager();
+            boolean canHandleEdit = (calIntent.resolveActivity(pm) != null);
+
+            if (!canHandleEdit) {
+                calIntent = new Intent(Intent.ACTION_INSERT)
+                        .setData(CalendarContract.Events.CONTENT_URI)
+                        .putExtras(calIntent.getExtras());
+            }
+
+            if (calIntent.resolveActivity(pm) == null) {
+                callback.error("No calendar app available to handle event creation.");
+                return;
+            }
 
           Calendar.this.cordova.startActivityForResult(Calendar.this, calIntent, RESULT_CODE_CREATE);
         }
@@ -605,6 +624,11 @@ public class Calendar extends CordovaPlugin {
       requestReadPermission(PERMISSION_REQCODE_LIST_EVENTS_IN_RANGE);
       return;
     }
+    
+    internalListEventsInRange(args);
+  }
+
+  private void internalListEventsInRange(JSONArray args) {
     try {
       final JSONObject jsonFilter = args.getJSONObject(0);
       long input_start_date = jsonFilter.optLong("startTime");
