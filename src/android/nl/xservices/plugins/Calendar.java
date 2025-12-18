@@ -422,21 +422,18 @@ public class Calendar extends CordovaPlugin {
             }
           }
 
-          PackageManager pm = cordova.getContext().getPackageManager();
-            boolean canHandleEdit = (calIntent.resolveActivity(pm) != null);
-
-            if (!canHandleEdit) {
-                calIntent = new Intent(Intent.ACTION_INSERT)
-                        .setData(CalendarContract.Events.CONTENT_URI)
-                        .putExtras(calIntent.getExtras());
+          try {
+            Calendar.this.cordova.startActivityForResult(Calendar.this, calIntent, RESULT_CODE_CREATE);
+          } catch (ActivityNotFoundException e) {
+            calIntent = new Intent(Intent.ACTION_INSERT)
+                      .setData(CalendarContract.Events.CONTENT_URI)
+                      .putExtras(calIntent.getExtras());
+            try {
+              Calendar.this.cordova.startActivityForResult(Calendar.this, calIntent, RESULT_CODE_CREATE);
+            } catch (ActivityNotFoundException ex) {
+              callback.error("No calendar app available to handle event creation.");
             }
-
-            if (calIntent.resolveActivity(pm) == null) {
-                callback.error("No calendar app available to handle event creation.");
-                return;
-            }
-
-          Calendar.this.cordova.startActivityForResult(Calendar.this, calIntent, RESULT_CODE_CREATE);
+          }
         }
       });
     } catch (JSONException e) {
